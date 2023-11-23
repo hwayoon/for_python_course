@@ -1,31 +1,56 @@
-from requests import get
+from selenium import webdriver
 from bs4 import BeautifulSoup
-base_url="https://weworkremotely.com/remote-jobs/search?term="
+from selenium.webdriver.chrome.options import Options
+options=Options()
+browser=webdriver.Chrome(options=options)
 
-search_term="nest"
+def get_page_count(keyword):
+    base_url="https://kr.indeed.com/jobs?q="
+    browser.get(f"{base_url}{keyword}")
+    soup=BeautifulSoup(browser.page_source, "html.parser")
+    pagination=soup.find("ul", class_="css-1g90gv6 eu4oa1w0")
+    if pagination==None:
+        return 1
+    pages=pagination.find_all("li", recursive=False)
+    count=len(pages)
+    if count >=5:
+        return 5
+    else:
+        return count
 
-response=get(f"{base_url}{search_term}")
-if response.status_code !=200:
-  print("Can't request website")
-else:
-  results=[]
-  soup=BeautifulSoup(response.text, "html.parser")
-  jobs=soup.find_all('section', class_="jobs")
-  for job_section in jobs:
-    job_posts=job_section.find_all('li')
-    job_posts.pop(-1)
-    for post in job_posts:
-      anchors = post.find_all('a')
-      anchor=anchors[1]
-      link = anchor['href']
-      company, kind, region = anchor.find_all('span', class_="company")
-      title=anchor.find('span', class_='title')
-      job_data={
-        'company':company.string,
-        'region':region.string,
-        'position':title.string,
-      }
-      results.append(job_data)
-  for result in results:
-    print(result)
-    print("---------------------------------------------------------")
+print(get_page_count("react"))
+print(get_page_count("python"))
+print(get_page_count("django"))
+print(get_page_count("nestjs"))
+print(get_page_count("java"))
+print(get_page_count("c#"))
+
+range()#start point here
+
+def extract_indeed_jobs(keyword):
+    pages=get_page_count(keyword)
+    base_url="https://kr.indeed.com/jobs?q="
+    browser.get(f"{base_url}{keyword}")
+
+    results=[]
+    soup=BeautifulSoup(browser.page_source, "html.parser")
+    job_list=soup.find("ul",class_="eu4oa1w0")
+    jobs=job_list.find_all('li',recursive=False)
+    for job in jobs:
+        zone=job.find("div", class_="mosaic-zone")
+        if zone==None:
+            anchor = job.select_one("h2 a")
+            title = anchor['aria-label']
+            link=anchor['href']
+            company=job.find("span", attrs={"data-testid":"company-name"})
+            location=job.find("div", attrs={"data-testid":"text-location"})
+            job_data={
+                'link':f"https://kr.indeed.com{link}",
+                'company':company.string,
+                'location':location.string,
+                'position':title,
+            }
+            results.append(job_data)
+    for result in results:
+        print(result)
+        print("===========================================================")
