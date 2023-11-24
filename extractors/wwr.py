@@ -21,9 +21,10 @@ def extract_wwr_jobs(keyword):
                 title=anchor.find('span', class_='title') #.find 항목당 1개만 찾을때
                 job_data={
                     'link': f"https://weworkremotely.com/{link}", 
-                    'company':company.string, #html 태그를 제거하고 사이의 text만 추출.
-                    'location':region.string,
-                    'position':title.string,
+                    'company':company.string.replace(",", " "), 
+                    #.string: html 태그를 제거하고 사이의 text만 추출.
+                    'location':region.string.replace(",", " "),
+                    'position':title.string.replace(",", " ")
                 }
                 results.append(job_data)
         return results
