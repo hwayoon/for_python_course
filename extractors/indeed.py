@@ -4,6 +4,7 @@ from selenium.webdriver.chrome.options import Options
 options=Options()
 browser=webdriver.Chrome(options=options)
 
+
 def get_page_count(keyword):
     base_url="https://kr.indeed.com/jobs?q="
     browser.get(f"{base_url}{keyword}")
@@ -32,21 +33,21 @@ def extract_indeed_jobs(keyword):
         print("Requesting", final_url)
         browser.get(final_url)
         soup=BeautifulSoup(browser.page_source, "html.parser")
-        job_list=soup.find("ul",class_="eu4oa1w0")
+        job_list=soup.find("ul",class_="css-zu9cdh")
         jobs=job_list.find_all('li',recursive=False)
         for job in jobs:
             zone=job.find("div", class_="mosaic-zone")
             if zone==None:
-                anchor = job.select_one("h2 a")
-                title = anchor['aria-label']
-                link=anchor['href']
-                company=job.find("span", attrs={"data-testid":"company-name"})
-                location=job.find("div", attrs={"data-testid":"text-location"})
+                anchor = job.select_one("h2 a", class_="jcs-JobTitle")
+                title = job.select_one("h2 a span")
+                link= anchor['href'] #here get some problems
+                company=job.select_one("span", attrs={"data-testid":"company-name"})
+                location=job.select_one("div", attrs={"data-testid":"text-location"})
                 job_data={
                     'link':f"https://kr.indeed.com{link}",
-                    'company':company.string.replace(",", " "),
-                    'location':location.string.replace(",", " "),
-                    'position':title.replace(",", " ")
+                    'company':company.string,
+                    'location':location.string,
+                    'position':title.string
                 }
                 results.append(job_data)
     return results
